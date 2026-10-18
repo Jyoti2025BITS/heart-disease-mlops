@@ -37,7 +37,9 @@ COLUMNS = [
     "num",
 ]
 
+
 NUMERIC = ["age", "trestbps", "chol", "thalach", "oldpeak"]
+
 
 CATEGORICAL = [
     "sex",
@@ -92,7 +94,12 @@ def main():
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
-    df = pd.read_csv(DATA_PATH, header=None, names=COLUMNS, na_values="?")
+    df = pd.read_csv(
+        DATA_PATH,
+        header=None,
+        names=COLUMNS,
+        na_values="?",
+    )
 
     y = (df["num"] > 0).astype(int)
 
@@ -100,14 +107,22 @@ def main():
 
     models = {
         "logistic_regression": LogisticRegression(
-            max_iter=2000, class_weight="balanced", random_state=42
+            max_iter=2000,
+            class_weight="balanced",
+            random_state=42,
         ),
         "random_forest": RandomForestClassifier(
-            n_estimators=300, class_weight="balanced", random_state=42
+            n_estimators=300,
+            class_weight="balanced",
+            random_state=42,
         ),
     }
 
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    cv = StratifiedKFold(
+        n_splits=5,
+        shuffle=True,
+        random_state=42,
+    )
 
     scoring = ["accuracy", "precision", "recall", "roc_auc"]
 
@@ -123,15 +138,25 @@ def main():
         pipeline = build_pipeline(estimator)
 
         scores = cross_validate(
-            pipeline, X, y, cv=cv, scoring=scoring, error_score="raise"
+            pipeline,
+            X,
+            y,
+            cv=cv,
+            scoring=scoring,
+            error_score="raise",
         )
 
         metrics = {
-            metric: round(float(np.mean(scores[f"test_{metric}"])), 4)
+            metric: round(
+                float(np.mean(scores[f"test_{metric}"])),
+                4,
+            )
             for metric in scoring
         }
 
         results[name] = metrics
+
+        # Fit the final pipeline for this model on the complete dataset.
 
         pipeline.fit(X, y)
 
@@ -148,13 +173,28 @@ def main():
 
             mlflow.log_param("artifact_format", "joblib")
 
+            # Record the estimator configuration.
+
+            mlflow.log_params(
+                {
+                    f"model_{key}": str(value)
+                    for key, value in estimator.get_params().items()
+                }
+            )
+
             mlflow.log_metrics(metrics)
 
-            mlflow.log_artifact(str(artifact), artifact_path="joblib")
+            mlflow.log_artifact(
+                str(artifact),
+                artifact_path="joblib",
+            )
 
         print(f"{name}: {metrics}")
 
-    best_name = max(results, key=lambda name: results[name]["roc_auc"])
+    best_name = max(
+        results,
+        key=lambda name: results[name]["roc_auc"],
+    )
 
     best_model = build_pipeline(models[best_name])
 
@@ -164,20 +204,38 @@ def main():
 
     joblib.dump(best_model, final_path)
 
-    with open(REPORT_DIR / "model_comparison.json", "w") as f:
+    comparison_path = REPORT_DIR / "model_comparison.json"
+
+    with open(comparison_path, "w", encoding="utf-8") as file:
         json.dump(
             {
                 "cross_validation": results,
                 "selected_model": best_name,
                 "selection_metric": "roc_auc",
             },
-            f,
+            file,
             indent=2,
+        )
+
+    # Track the final selection and comparison report.
+
+    with mlflow.start_run(run_name="model_comparison_summary"):
+        mlflow.log_param("selected_model", best_name)
+
+        mlflow.log_param("selection_metric", "roc_auc")
+
+        mlflow.log_artifact(str(comparison_path))
+
+        mlflow.log_artifact(
+            str(final_path),
+            artifact_path="selected_model",
         )
 
     print(f"\nSelected model: {best_name}")
 
     print(f"Saved model: {final_path}")
+
+    print(f"Comparison report: {comparison_path}")
 
     print(f"MLflow database: {tracking_db}")
 

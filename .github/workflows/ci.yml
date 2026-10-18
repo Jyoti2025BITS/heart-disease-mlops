@@ -16,6 +16,12 @@ on:
 
 
 
+permissions:
+
+  contents: read
+
+
+
 jobs:
 
   build:
@@ -54,6 +60,12 @@ jobs:
 
 
 
+      - name: Download dataset
+
+        run: python src/download_data.py
+
+
+
       - name: Run Ruff lint
 
         run: ruff check src tests
@@ -66,7 +78,32 @@ jobs:
 
 
 
+      - name: Train and compare models
+
+        run: python src/train.py
+
+
+
       - name: Run tests
 
         run: python -m pytest -v
 
+
+
+      - name: Upload training artifacts
+
+        if: always()
+
+        uses: actions/upload-artifact@v4
+
+        with:
+
+          name: mlops-training-artifacts
+
+          path: |
+
+            reports/model_comparison.json
+
+            models/*.joblib
+
+          if-no-files-found: warn
