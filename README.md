@@ -114,3 +114,72 @@ Random Forest has the higher ROC-AUC in these recorded runs, while both models h
 - Model performance can vary with data splits, preprocessing, population, and deployment conditions.
 - A prediction must not be interpreted as a diagnosis or a substitute for professional medical care.
 
+
+
+
+## Docker Deployment
+
+
+
+Build and run the API:
+
+
+
+    docker build -t heart-disease-api:latest .
+
+    docker run -d --name heart-disease-api -p 8000:8000 heart-disease-api:latest
+
+
+
+Or use Docker Compose:
+
+
+
+    docker compose up -d --build
+
+    docker compose ps
+
+    docker compose logs --tail=50
+
+
+
+Test the health endpoint:
+
+
+
+    curl http://localhost:8000/health
+
+
+
+Test prediction:
+
+
+
+    curl -X POST http://localhost:8000/predict -H "Content-Type: application/json" -d '{"age":63,"sex":1,"cp":3,"trestbps":145,"chol":233,"fbs":1,"restecg":0,"thalach":150,"exang":0,"oldpeak":2.3,"slope":2,"ca":0,"thal":3}'
+
+
+
+## Kubernetes Deployment
+
+
+
+Kubernetes manifests are available in `deployment/`. Deployment requires a configured Kubernetes cluster, `kubectl`, and an image accessible to the cluster.
+
+
+
+    kubectl apply -f deployment/deployment.yaml
+
+    kubectl apply -f deployment/service.yaml
+
+
+
+The manifests have been prepared but have not yet been deployed to a Kubernetes cluster.
+
+
+
+## Disclaimer
+
+
+
+This project is for educational purposes only. Predictions are not medical diagnoses.
+
