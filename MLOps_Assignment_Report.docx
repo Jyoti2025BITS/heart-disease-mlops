@@ -1,0 +1,85 @@
+HEART DISEASE CLASSIFICATION
+
+MLOps ASSIGNMENT REPORT
+
+Project implementation, evaluation, experiment tracking, and API verification
+
+1. Abstract
+
+This project implements an end-to-end machine-learning workflow for binary classification using the Cleveland heart-disease dataset. The workflow includes data inspection and exploratory data analysis, training and comparison of Logistic Regression and Random Forest models, MLflow experiment tracking, saved model artifacts, a FastAPI prediction service, API tests, and a GitHub Actions continuous-integration workflow. The recorded runs show an accuracy of 0.8349 for both models; Random Forest has a slightly higher ROC-AUC of 0.9125 compared with 0.9099 for Logistic Regression.
+
+2. Project objectives
+
+•	Inspect and explore the dataset and create EDA visualizations.
+
+•	Train and compare two classification models.
+
+•	Record parameters, evaluation metrics, and model artifacts using MLflow.
+
+•	Save trained model artifacts for reuse.
+
+•	Expose prediction and health-check endpoints through FastAPI.
+
+•	Automate linting, formatting checks, and tests through GitHub Actions.
+
+3. Dataset and exploratory analysis
+
+The project uses data/raw/processed.cleveland.data. The dataset inspection recorded 303 rows and 14 original feature columns before the target was added/derived in the project processing flow; a later processed view was reported as 303 rows by 15 columns. Missing values were observed in the ca field (4) and thal field (2). The recorded binary target counts were 164 for class 0 and 139 for class 1.
+
+The repository contains four EDA plots: target balance, age distribution, cholesterol by target, and a correlation heatmap. These plots provide a visual overview of target distribution, selected feature distributions, and feature relationships.
+
+4. Model training and evaluation
+
+The training code evaluates Logistic Regression and Random Forest and records the runs in the MLflow experiment named 'heart-disease-classification'. The metrics below are taken from the verified MLflow run output.
+
+Model	Accuracy	Precision	ROC-AUC
+
+Logistic Regression	0.8349	0.8319	0.9099
+
+Random Forest	0.8349	0.8415	0.9125
+
+Both models have the same recorded accuracy. Random Forest has the higher recorded precision and ROC-AUC, so it was selected as the preferred model in the project results. This comparison is limited to the recorded evaluation and should not be interpreted as evidence of clinical suitability.
+
+5. MLflow experiment tracking
+
+The training code configures MLflow to use a local SQLite tracking database named mlflow.db and sets the experiment name to 'heart-disease-classification'. It logs model name, cross-validation fold count, random state, artifact format, evaluation metrics, and saved model artifacts. Verification found two runs, both with status FINISHED: logistic_regression and random_forest.
+
+6. Model artifacts and API
+
+The project contains the following saved model files: models/heart_disease_pipeline.joblib, models/logistic_regression.joblib, and models/random_forest.joblib. The FastAPI service in src/api.py provides a health endpoint and a prediction endpoint.
+
+The health check returned {"status":"healthy","model_loaded":true}. A valid POST request to /predict returned prediction 0, interpretation 'heart disease not detected by model', and probability_class_1 0.3567 for the submitted sample. This confirms that the endpoint accepted the request and returned the expected response structure.
+
+7. Testing and continuous integration
+
+The repository includes tests/test_api.py and pytest.ini. The local checks recorded during development were successful: Ruff linting passed, Ruff formatting validation passed, and three API tests passed. The GitHub Actions workflow at .github/workflows/ci.yml was corrected after an initial YAML syntax error. A subsequent workflow run completed successfully. The workflow installs dependencies, runs Ruff linting, checks formatting, and executes pytest.
+
+8. Repository artifacts
+
+•	Source code: src/api.py, src/train.py, src/eda.py, src/inspect_data.py, src/download_data.py.
+
+•	Dataset: data/raw/processed.cleveland.data.
+
+•	Models: three .joblib artifacts in models/.
+
+•	Evaluation summary: reports/model_comparison.json.
+
+•	EDA images: four PNG files in screenshots/eda/.
+
+•	Tests: tests/test_api.py.
+
+•	CI workflow: .github/workflows/ci.yml.
+
+9. Limitations and responsible use
+
+This is an educational project using a historical dataset. The reported metrics alone do not establish generalization to other populations or clinical settings. Dataset size, missing values, preprocessing choices, evaluation methodology, class balance, and distribution shift may affect performance. The API output is a model prediction, not a diagnosis, and must not be used for clinical decisions or to replace advice from a qualified healthcare professional.
+
+10. Conclusion and next steps
+
+The project currently demonstrates the core MLOps workflow: data exploration, model comparison, MLflow tracking, artifact saving, an API for inference, automated tests, and CI. Before submission, the student should verify the professor's rubric, add any required author/course details, ensure the README and this report are committed to GitHub and present in the Prayogshala workspace, and record a short demo showing the successful CI run, MLflow runs, API health check, and a prediction request.
+
+
+
+Submission note: Fill in student name, course/assignment identifiers, and date if required by the institution.
+
+
